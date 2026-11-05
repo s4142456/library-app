@@ -2,12 +2,14 @@
 
 Average completed-session time per user and the top 10 most-read books by total reading time.
 
+The application roles are `user` and `admin`. Only authenticated users with the `admin` role can access reading analytics; the `user` role cannot access these reports.
+
 Duration is elapsed visit time from US 02: `endTime - startTime`, using server timestamps. It includes any idle time within a completed visit. Only sessions with a recorded valid end time qualify; no heartbeat or abandoned-session recovery is required.
 
 ```gherkin
 @us03 @must_have @mongodb @reading_analytics
 Feature: View reading analytics
-  As an authenticated staff member
+  As an authenticated admin
   I want to view reading-time analytics
   So that I can understand user engagement and identify the most-read books
 
@@ -16,7 +18,7 @@ Feature: View reading analytics
   # Project brief - Reading Analytics - Top 10 books by total reading time
   # Narrowed scope excludes most-highlighted-books analytics
   #
-  # Primary actor: Staff member
+  # Primary actor: Admin
   # Analytics source: MongoDB reading_sessions
   # Enrichment source: MySQL USER and BOOK metadata
   # Dependency: US 02 produces valid reading sessions
@@ -26,16 +28,16 @@ Feature: View reading analytics
     And valid completed sessions contain userId, bookId, startTime, and endTime
     And user and book display information exists in MySQL
 
-  Rule: Reading analytics are restricted to authorized staff
+  Rule: Reading analytics are restricted to admins
 
     @authorization
-    Scenario: Staff member opens the analytics dashboard
-      Given I am authenticated with the role "STAFF"
+    Scenario: Admin opens the analytics dashboard
+      Given I am authenticated with the role "admin"
       When I request the reading analytics dashboard
       Then I can request both supported analytics reports
 
     @authorization
-    Scenario Outline: Reject a caller who is not authorized staff
+    Scenario Outline: Reject a caller who is not an authenticated admin
       Given my authentication state is "<authentication>"
       And my role is "<role>"
       When I request a reading analytics report
@@ -46,7 +48,7 @@ Feature: View reading analytics
         | authentication | role   | status |
         | missing        | NONE   | 401    |
         | invalid        | NONE   | 401    |
-        | valid          | READER | 403    |
+        | valid          | user   | 403    |
 
   Rule: Average session time is calculated per user
 
@@ -327,7 +329,6 @@ These are candidates, not guaranteed optimizations. Final choices must be based 
 
 ## Open Decisions
 
-- [ ] Confirm whether analytics are staff-only; this draft assumes they are.
 - [ ] Confirm the deterministic tie-breaker for books with equal total reading time.
 - [ ] Confirm whether analytics cover all time or support a date range.
 - [ ] Confirm the display unit and rounding rule for durations.

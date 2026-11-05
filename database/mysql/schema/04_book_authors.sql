@@ -6,5 +6,5 @@ CREATE TABLE book_authors(
     authorId INT NOT NULL,
     PRIMARY KEY (bookId, authorId),
     FOREIGN KEY (bookId) REFERENCES books(bookId),
-    FOREIGN KEY (authorId) REFERENCES authors(authorId),
+    FOREIGN KEY (authorId) REFERENCES authors(authorId)
 );

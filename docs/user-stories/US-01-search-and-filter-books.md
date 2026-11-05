@@ -2,6 +2,8 @@
 
 This Gherkin specification defines how an authenticated user discovers readable books through a search bar and filters. Borrowing and physical-copy availability are not part of this narrowed feature.
 
+The only supported genre values are `comedy`, `action`, `scifi`, and `nonfiction`, matching the MySQL enum. The interface may display them as Comedy, Action, Sci-fi, and Non-fiction; API requests and stored values use the lowercase enum values.
+
 ```gherkin
 @us01 @must_have @book_search
 Feature: Search and filter readable books
@@ -65,9 +67,9 @@ Feature: Search and filter readable books
         | author name | George Orwell | orw    |
         | author name | George Orwell | ORW    |
         | author name | George Orwell | well   |
-        | genre       | Fantasy       | fant   |
-        | genre       | Fantasy       | FANT   |
-        | genre       | Fantasy       | anta   |
+        | genre       | nonfiction    | nonf   |
+        | genre       | nonfiction    | NONF   |
+        | genre       | nonfiction    | fict   |
         | publisher   | Pearson       | pear   |
         | publisher   | Pearson       | PEAR   |
         | publisher   | Pearson       | arso   |
@@ -75,14 +77,14 @@ Feature: Search and filter readable books
     @partial_search @cross_field_matches
     Scenario: Return all books matching through any searchable field
       Given the following published readable books exist:
-        | book ID | title              | author name | genre      | publisher     |
-        | 101     | The Art of Reading | Alice Brown | Education  | North Press   |
-        | 102     | Ocean Life         | Arthur Lee  | Science    | West Press    |
-        | 103     | Colour Studies     | Mary Green  | Fine Arts  | East Press    |
-        | 104     | Garden Notes       | Jane Smith  | Gardening  | Artisan Press |
-        | 105     | Winter Tales       | John White  | Fiction    | South Press   |
+        | book ID | title             | author name  | genre      | publisher    |
+        | 101     | The Art of Acting | Alice Brown  | nonfiction | North Press  |
+        | 102     | Ocean Life        | Arthur Acton | scifi      | West Press   |
+        | 103     | City Pursuit      | Mary Green   | action     | East Press   |
+        | 104     | Garden Notes      | Jane Smith   | nonfiction | Active Press |
+        | 105     | Winter Tales      | John White   | comedy     | South Press  |
       And no filters are selected
-      When I search for "aRt"
+      When I search for "aCt"
       Then exactly books 101, 102, 103, and 104 are returned
       And book 105 is excluded because none of its searchable fields contains the term
 
@@ -112,8 +114,8 @@ Feature: Search and filter readable books
     @genre_filter
     Scenario: Filter by genre
       Given published books exist in several genres
-      When I select the genre "Fantasy"
-      Then every returned book has the genre "Fantasy"
+      When I select the genre "scifi"
+      Then every returned book has the genre "scifi"
       And books from other genres are excluded
 
     @publisher_filter
@@ -127,10 +129,10 @@ Feature: Search and filter readable books
     Scenario: Combine a text search with genre and publisher filters
       Given books exist across several authors, genres, and publishers
       When I search for "database"
-      And I select the genre "Technology"
+      And I select the genre "nonfiction"
       And I select the publisher "Pearson"
       Then each result contains "database" in its title, any associated author name, genre, or publisher ignoring case
-      And each result has the genre "Technology"
+      And each result has the genre "nonfiction"
       And each result has the publisher "Pearson"
 
     @filter_semantics
@@ -142,9 +144,9 @@ Feature: Search and filter readable books
 
     @combined_filters
     Scenario: Exclude a text match that fails a selected filter
-      Given a published readable book has publisher "Pearson" and genre "Science"
+      Given a published readable book has publisher "Pearson" and genre "nonfiction"
       When I search for "PEAR"
-      And I select the genre "Fantasy"
+      And I select the genre "scifi"
       Then that book is excluded even though its publisher matches the search term
 
     @clear_search
@@ -175,7 +177,7 @@ Feature: Search and filter readable books
     Scenario: Display only valid filter choices
       Given genres and publishers exist in the approved data source
       When the filter controls load
-      Then every selectable genre is valid
+      Then the selectable genre values are exactly "comedy", "action", "scifi", and "nonfiction"
       And every selectable publisher is valid
       And the user is not required to enter an internal identifier manually
 
@@ -298,6 +300,7 @@ Treat characters in the search term as literal text, including any characters th
 
 - `USER` stores the authenticated user identity.
 - `BOOK` stores bookId, title, publisher, genre, and a protected contentReference.
+- Each book has exactly one genre from the fixed enum: `comedy`, `action`, `scifi`, or `nonfiction`.
 - "Published readable" means the book has content approved for this application and available through the content endpoint. This narrowed scope does not require a separate publicationStatus or digitalFormat field. The reader obtains page count from the chosen content format when available.
 - `AUTHOR` stores each author once.
 - `BOOK_AUTHOR` resolves the many-to-many relationship between books and authors.
@@ -323,7 +326,7 @@ Index choices must preserve the required substring behavior. Do not assume that 
 - Several titles containing the same term.
 - Similar author names.
 - At least one multi-author book.
-- Several genres and publishers.
+- All four supported genres (`comedy`, `action`, `scifi`, and `nonfiction`) and several publishers.
 - A published book with readable digital content.
 - An unpublished or missing-content book.
 - Enough rows for meaningful query-plan comparison.

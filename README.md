@@ -1,6 +1,6 @@
 # Library App
 
-A small library web application for practicing database design and backend development. The interface will remain basic so development can focus on SQL queries, database connections, views, procedures, functions, triggers, and MongoDB aggregation.
+A small library web application
 
 ## Scope
 
@@ -37,8 +37,8 @@ Different files have different responsibilities:
 
 | Location | Responsibility |
 | --- | --- |
-| `database/mysql/setup.sql` | Intended entry point for running database creation, table scripts, and development seed data in order |
-| `database/mysql/schema/00_database.sql` | Create and select the MySQL database named `library-app` |
+| `database/mysql/setup.sql` | Development reset entry point: run database creation, table scripts, and sample data in order, then display record counts |
+| `database/mysql/schema/00_database.sql` | Drop, recreate, and select the MySQL database named `library-app`; existing data is removed |
 | `database/mysql/schema/01_users.sql` through `04_book_authors.sql` | Define the four relational tables and their constraints |
 | `database/mysql/seeds/sample_data.sql` | Insert development sample records |
 | `backend/src/database/mysql.ts` | Backend MySQL connection configuration and connection pool |
@@ -53,11 +53,11 @@ Saving a SQL file does not execute it. The database and tables are created only 
 
 ## Current implementation status
 
-- The MySQL database and table definition scripts contain initial SQL.
-- `setup.sql` currently contains purpose comments only; its orchestration commands still need to be written.
-- Package manifests, application source/configuration files, database connection modules, and seed files are still placeholders. The application is not runnable yet.
+- The MySQL schema and setup runner are written. Run the MySQL CLI from `database/mysql` so the runner's relative `SOURCE` paths resolve correctly.
+- The MySQL seed file inserts 5 users, 15 books, 10 authors, and 23 book-author links. It documents demo credentials and salted scrypt hashes; authentication is not implemented yet. Content paths are placeholders, not supplied book files.
+- Package manifests, application source/configuration files, database connection modules, and MongoDB scripts are still placeholders. The application is not runnable yet.
 - Package versions and installation/startup commands have not been configured.
 - The book content format and authentication implementation still need to be selected.
 - `compose.yaml` is a placeholder. Local database services are the current development approach; Docker configuration has not been implemented.
 
-The next milestone is to execute and verify the MySQL schema, add sample data, then initialize the backend dependencies and test its MySQL connection.
+The next milestone is to run the saved MySQL setup against the local development server, then initialize the backend dependencies and test its MySQL connection.
